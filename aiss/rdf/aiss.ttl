@@ -1,4 +1,4 @@
-@prefix aiss: <https://example.com/aiss#> .
+@prefix aiss: <https://w3id.org/aiss#> .
 @prefix bot:  <https://w3id.org/bot#> .
 @prefix ioe:  <https://w3id.org/semioe#> .
 @prefix org:  <https://www.w3.org/ns/org#> .
@@ -11,7 +11,7 @@
 @prefix vann: <http://purl.org/vocab/vann/> .
 
 
-<https://example.com/aiss#> rdf:type owl:Ontology ;
+<https://w3id.org/aiss#> rdf:type owl:Ontology ;
 owl:imports org: ;
 <http://purl.org/dc/elements/1.1/created> "2025/07/20 18:44:00" ;
 <http://purl.org/dc/elements/1.1/title> "AISS" ;
