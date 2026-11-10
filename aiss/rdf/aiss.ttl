@@ -1,0 +1,1985 @@
+@prefix aiss: <https://example.com/aiss#> .
+@prefix bot:  <https://w3id.org/bot#> .
+@prefix ioe:  <https://w3id.org/semioe#> .
+@prefix org:  <https://www.w3.org/ns/org#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+
+<https://example.com/aiss#> rdf:type owl:Ontology ;
+owl:imports org: ;
+<http://purl.org/dc/elements/1.1/created> "2025/07/20 18:44:00" ;
+<http://purl.org/dc/elements/1.1/title> "AISS" ;
+dcterms:creator [ 
+                  rdf:type foaf:Agent ;
+                  foaf:homepage <https://orcid.org/0000-0003-2120-2341> ;
+                  foaf:name "Antonino Nocera"
+            ],
+            [ 
+                  rdf:type foaf:Agent ;
+                  foaf:homepage <https://orcid.org/0000-0002-3371-307X> ;
+                  foaf:name "Marco Arazzi"
+            ],
+            [ 
+                  rdf:type foaf:Agent ;
+                  foaf:homepage <https://orcid.org/0009-0001-7040-4292> ;
+                  foaf:name "Aiman Al Masoud"
+            ];
+# TODO: add license?
+# dcterms:license <https://creativecommons.org/licenses/by/4.0> ;
+vann:preferredNamespacePrefix "aiss" ;
+vann:preferredNamespaceUri <https://w3id.org/aiss#> ;
+rdfs:comment "AISS (Airport Information Semantic Scheme) is an ontology for the airport domain, focused on modelling ground operations, resources, and sources of information, with the aim of optimizing the aircraft turnaround process. Aircraft turnaround is a critical step in airport operations, as it is the process by which the actors across several airports co-ordinate by sharing real-time information." ;
+rdfs:label "AISS (Airport Information Semantic Scheme)" ;
+owl:versionInfo "0.2" .
+
+# CORE OF THE ONTOLOGY -------------------------------------------------------------------------------------
+
+aiss:startsAt rdf:type owl:ObjectProperty ;
+              rdfs:range xsd:dateTime ;
+              rdfs:comment "Relates an event or process to its actual starting time." ;
+              rdfs:label "startsAt" .
+
+aiss:endsAt rdf:type owl:ObjectProperty ;
+            rdfs:range xsd:dateTime;
+            rdfs:comment "Relates an event or process to its actual ending time." ;
+            rdfs:label "endsAt" .
+
+aiss:takesPlaceAt rdf:type owl:ObjectProperty ;
+                  rdf:type owl:FunctionalProperty ;
+                  rdfs:domain aiss:Event ;
+                  rdfs:range aiss:Site ;
+                  rdfs:comment "Relates an event to the site (location) it takes place in." ;
+                  rdfs:label "takesPlaceAt" .
+
+aiss:prerequires rdf:type owl:ObjectProperty ;
+                 rdfs:domain aiss:Event ;
+                 rdfs:range aiss:Event;
+                 rdfs:comment "Relates an event E to an event E' that is a temporal prerequisite for E." ;
+                 rdfs:label "prerequires" .
+
+aiss:blockedBy rdf:type owl:ObjectProperty ;
+                 rdfs:domain aiss:Event ;
+                 rdfs:range aiss:Event;
+                 rdfs:comment "Relates an event E to an event E' that acts as a blocker for E." ;
+                 rdfs:label "blockedBy" .
+
+aiss:detectedBy rdf:type owl:ObjectProperty ;
+                rdfs:domain aiss:Event ;
+                rdfs:range aiss:Agent;
+                rdfs:comment "Relates an event to the agent that detected it." ;
+                rdfs:label "detectedBy" .
+
+aiss:hasOrigin  rdf:type owl:ObjectProperty;
+                rdf:type owl:FunctionalProperty;
+                rdfs:domain aiss:Flight ;
+                rdfs:range aiss:Airport ;
+                rdfs:comment "Relates a flight to its origin airport." ;
+                rdfs:label "hasOrigin" .
+
+aiss:hasAircraft rdf:type owl:ObjectProperty ;
+                rdfs:domain aiss:Flight ;
+                rdfs:range aiss:Aircraft ;
+                rdfs:label "hasAircraft".
+
+aiss:hasPassenger rdf:type owl:ObjectProperty ;
+                rdfs:domain aiss:Flight ;
+                rdfs:range aiss:Passenger ;
+                rdfs:label "hasPassenger" .
+
+aiss:hasDeadload rdf:type owl:ObjectProperty ;
+                  rdfs:range aiss:Deadload ;
+                  rdfs:domain aiss:Flight ;
+                  rdfs:label "hasDeadload" .
+
+aiss:hasDestination rdf:type owl:ObjectProperty;
+                rdf:type owl:FunctionalProperty ;
+                rdfs:domain aiss:Flight ;
+                rdfs:range aiss:Airport ;
+                rdfs:comment "Relates a flight to its destination airport." ;
+                rdfs:label "hasDestination" .
+
+aiss:hasMass rdf:type owl:ObjectProperty;
+            rdf:type owl:FunctionalProperty ;
+            rdfs:domain aiss:Deadload ;
+            rdfs:range aiss:Mass ;
+            rdfs:comment "Relates a deadload item to its mass in kilograms." ;
+            rdfs:label "hasMass" .
+
+aiss:Site rdf:type owl:Class;
+          rdfs:subClassOf ioe:Site;
+          rdfs:comment "A physical location.".
+
+aiss:Agent rdf:type owl:Class;
+           rdfs:subClassOf ioe:Agent;
+           rdfs:comment "A physical or non-physical object endowed with agency.".
+
+aiss:Organization rdf:type owl:Class;
+                  rdfs:subClassOf aiss:Agent;
+                  rdfs:subClassOf org:Organization;
+                  rdfs:comment "An organization involved in the airport ecosystem.".
+ 
+aiss:PhysicalObject rdf:type owl:Class;
+                    # Can take part in ioe:Activity
+                    rdfs:subClassOf ioe:Agent;
+                    # Is located in one place at any given time
+                    rdfs:subClassOf [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty ioe:locatedIn ;
+                        owl:cardinality "1"^^xsd:int ;
+                  ];
+                  rdfs:comment "Any living or non-living physical object, always located in one place/site at any given time.".  
+
+aiss:Aircraft rdf:type owl:Class;
+      rdfs:subClassOf ioe:System;
+      rdfs:subClassOf aiss:PhysicalObject;
+      rdfs:comment "An aircraft such as a jetliner.".
+
+aiss:Flight rdf:type owl:Class;
+            rdfs:subClassOf ioe:Process;
+            rdfs:subClassOf [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:hasDestination ;
+                  owl:cardinality "1"^^xsd:int ;
+            ],
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:hasOrigin ;
+                  owl:cardinality "1"^^xsd:int ;
+            ],
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:hasDeadload ;
+                  owl:minCardinality "1"^^xsd:int ;
+            ],
+            [
+                  rdf:type owl:Restriction;
+                  owl:onProperty aiss:hasAircraft ;
+                  owl:cardinality "1"^^xsd:int ;
+            ],
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:hasPassenger ;
+                  owl:minCardinality "1"^^xsd:int ;
+            ],
+            [ 
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:startsAt;
+                  owl:cardinality "1"^^xsd:nonNegativeInteger
+            ],
+            [ 
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:endsAt;
+                  owl:cardinality "1"^^xsd:nonNegativeInteger
+            ];
+            rdfs:comment "A scheduled commercial flight.".
+
+aiss:HumanAgent rdf:type owl:Class;
+            rdfs:subClassOf aiss:Agent;
+            rdfs:subClassOf ioe:HAgent;
+            rdfs:subClassOf aiss:PhysicalObject;
+            rdfs:comment "A person, a human being.".
+
+aiss:involves rdf:type owl:ObjectProperty;
+      rdfs:domain aiss:Event;
+      rdfs:range aiss:PhysicalObject;
+      owl:inverseOf ioe:engagedIn;
+      rdfs:comment "Relates an event to a physical object that plays some role in it." .
+
+aiss:Event rdf:type owl:Class ;
+           rdfs:subClassOf ioe:Activity;
+           rdfs:subClassOf [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:takesPlaceAt;
+                              owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ],
+                           # Actual starting time of the event
+                           [ 
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:startsAt;
+                              owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ],
+                           # Actual ending time of the event
+                           [ 
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:endsAt;
+                              owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ];
+           rdfs:comment "Any event that takes place somewhere, involves someone/something, and can be detected by an agent.";
+           rdfs:label "Event".
+
+aiss:hasStatus rdf:type owl:ObjectProperty;
+      rdf:type owl:FunctionalProperty;
+      rdfs:domain aiss:Event;
+      rdfs:range aiss:EventStatus;
+      rdfs:comment "Relates an event to its status." .
+
+aiss:EventStatus rdf:type owl:Class;
+                 rdfs:comment "Termination status of an event.".
+
+aiss:Blocked rdf:type owl:NamedIndividual ,
+                    aiss:EventStatus ;
+                    rdfs:comment "Event cannot start.".
+
+aiss:Ready rdf:type owl:NamedIndividual ,
+                    aiss:EventStatus ;
+                    rdfs:comment "Event is ready to start".
+
+aiss:Running rdf:type owl:NamedIndividual ,
+                     aiss:EventStatus ;
+                     rdfs:comment "Event is running.".
+
+aiss:Completed rdf:type owl:NamedIndividual ,
+                        aiss:EventStatus ;
+                        rdfs:comment "Event terminated successfully".
+
+aiss:Aborted rdf:type owl:NamedIndividual ,
+                     aiss:EventStatus ;
+                     rdfs:comment "Event terminated unsuccessfully.".
+
+aiss:Membership rdf:type owl:Class;
+                rdfs:subClassOf org:Membership;
+                rdfs:comment "A membership of an agent, in an organization, with a role.".
+
+aiss:sufficientlyInformedBy a owl:ObjectProperty ;
+    rdfs:domain aiss:Membership;
+    rdfs:range  aiss:InfoSource;
+    rdfs:comment "Relates a membership to an information source that sufficiently informs it.".
+
+aiss:Role rdf:type owl:Class;
+          rdfs:subClassOf org:Role;
+          rdfs:comment "A role of an agent in an organization.".
+
+aiss:hasMember a owl:ObjectProperty, rdf:Property, owl:FunctionalProperty;
+    rdfs:subPropertyOf org:member;
+    rdfs:domain aiss:Membership;
+    rdfs:range  aiss:Agent;
+    rdfs:comment "Relates a membership to the member agent.".
+
+aiss:isMemberOf a owl:ObjectProperty ;
+    owl:inverseOf aiss:hasMember;
+    rdfs:comment "Relates member agent to membership.".
+
+aiss:hasOrganization a owl:ObjectProperty, rdf:Property, owl:FunctionalProperty;
+    rdfs:subPropertyOf org:organization;
+    rdfs:domain aiss:Membership;
+    rdfs:range  aiss:Organization;
+    rdfs:comment "Relates a membership to the organization it refers to.".
+
+aiss:hasRole a owl:ObjectProperty, rdf:Property;
+    rdfs:subPropertyOf org:role;
+    rdfs:domain aiss:Membership;
+    rdfs:range  aiss:Role;
+    rdfs:comment "Relates a membership to the role the member agent plays.".
+
+aiss:hasRoleInOrganization a owl:ObjectProperty ;
+    rdfs:domain aiss:Agent ;
+    rdfs:range aiss:Role;
+    rdfs:comment "Derived property that relates agent directly to its role (without membership mediation).".
+
+# Property chain: Agent -> Membership -> Role
+aiss:hasRoleInOrganization
+    owl:propertyChainAxiom ( aiss:isMemberOf aiss:hasRole ) .
+
+aiss:Right rdf:type owl:Class;
+           rdfs:subClassOf ioe:Right;
+           rdfs:comment "A right to do something with some resource.".
+
+aiss:RightOnInfoSource rdf:type owl:Class;
+                       rdfs:subClassOf aiss:Right;
+                       rdfs:comment "The right to read an info source".
+
+aiss:onInfoSource a owl:ObjectProperty, rdf:Property;
+    rdfs:domain aiss:RightOnInfoSource;
+    rdfs:range  aiss:InfoSource;
+    rdfs:comment "Relates a right to the info source it grants access to.".
+
+aiss:about a owl:ObjectProperty, rdf:Property;
+    rdfs:domain aiss:InfoSource;
+    rdfs:range  aiss:PhysicalObject;
+    rdfs:comment "Relates an info source to the physical object it is about.".
+
+aiss:InfoSource rdf:type owl:Class;
+                rdfs:comment "A queryiable information source, such as an API endpoint.".
+
+# EVENTS ----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+aiss:LandingQueueEvent rdf:type owl:Class ;
+                    rdfs:subClassOf aiss:Event;
+                    rdfs:subClassOf [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:Aircraft;
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:takesPlaceAt ;
+                                          owl:someValuesFrom aiss:HoldingPatternAirspace
+                                    ] ;
+                    rdfs:comment "When the aircraft is waiting for its turn to land on a runway.".
+
+aiss:TouchdownEvent rdf:type owl:Class ;
+                    rdfs:subClassOf aiss:Event;
+                    rdfs:subClassOf [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:Aircraft;
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass [
+                                                a owl:Restriction ;
+                                                owl:onProperty aiss:hasRoleInOrganization ;
+                                                owl:hasValue aiss:ControlTowerOperator
+                                          ];
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:takesPlaceAt ;
+                                          owl:someValuesFrom aiss:Runway
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:prerequires ;
+                                          owl:someValuesFrom aiss:LandingQueueEvent
+                                    ];
+                    rdfs:comment "When the aircraft successfully touches down on the runway, happens at Actual Landing Time (ALDT), corresponding to ATA (Actual Time of Arrival).".
+
+aiss:TaxiingAtArrivalEvent rdf:type owl:Class ;
+                           rdfs:subClassOf aiss:Event;
+                           rdfs:subClassOf [
+                                                rdf:type owl:Restriction ;
+                                                owl:onProperty aiss:involves ;
+                                                owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                                owl:onClass aiss:Aircraft;
+                                          ],
+                                          [
+                                                rdf:type owl:Restriction ;
+                                                owl:onProperty aiss:involves ;
+                                                owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                                owl:onClass [
+                                                a owl:Restriction ;
+                                                owl:onProperty aiss:hasRoleInOrganization ;
+                                                owl:hasValue aiss:ControlTowerOperator
+                                          ];
+                                          ],
+                                          [
+                                                rdf:type owl:Restriction ;
+                                                owl:onProperty aiss:involves ;
+                                                owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                                owl:onClass [
+                                                      a owl:Restriction ;
+                                                      owl:onProperty aiss:hasRoleInOrganization ;
+                                                      owl:hasValue aiss:FollowMeOperator
+                                                ];
+                                          ],
+                                          [
+                                                rdf:type owl:Restriction ;
+                                                owl:onProperty aiss:takesPlaceAt ;
+                                                owl:someValuesFrom aiss:Taxiway
+                                          ],
+                                          [
+                                                rdf:type owl:Restriction ;
+                                                owl:onProperty aiss:prerequires ;
+                                                owl:someValuesFrom aiss:TouchdownEvent
+                                          ];
+                           rdfs:comment "When the aircraft taxis to reach its parking spot after having landed.".
+
+
+aiss:StandClearingAtArrivalEvent rdf:type owl:Class;
+                        rdfs:subClassOf aiss:Event;
+                        rdfs:subClassOf  [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:takesPlaceAt ;
+                              owl:someValuesFrom aiss:Stand
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass [
+                                    a owl:Restriction ;
+                                    owl:onProperty aiss:hasRoleInOrganization ;
+                                    owl:hasValue aiss:GroundCrewAgent
+                              ];
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:GSE;
+                        ];
+                       rdfs:comment "When the stand is cleared in preparation for Aircraft Arrival.".
+
+
+aiss:CheckParkingEvent rdf:type owl:Class ;
+                       rdfs:subClassOf aiss:Event;
+                       rdfs:subClassOf    [
+                                                rdf:type owl:Restriction ;
+                                                owl:onProperty aiss:involves ;
+                                                owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                                owl:onClass [
+                                                a owl:Restriction ;
+                                                owl:onProperty aiss:hasRoleInOrganization ;
+                                                owl:hasValue aiss:RampAgent
+                                          ];
+                                          ],
+                                          [
+                                                rdf:type owl:Restriction ;
+                                                owl:onProperty aiss:involves ;
+                                                owl:minQualifiedCardinality "0"^^xsd:nonNegativeInteger ;
+                                                owl:onClass aiss:FOD;
+                                          ],
+                                          [
+                                                rdf:type owl:Restriction ;
+                                                owl:onProperty aiss:takesPlaceAt ;
+                                                owl:someValuesFrom aiss:Stand
+                                          ],
+                                          [
+                                                rdf:type owl:Restriction ;
+                                                owl:onProperty aiss:prerequires ;
+                                                owl:someValuesFrom aiss:StandClearingAtArrivalEvent
+                                          ];
+                       rdfs:comment "When the ramp agent checks the stand for FOD (Foreign Object Debris), prior to aircraft parking.".
+
+# Does this also have to involve a Ramp Agent, or can pilot park without help?
+aiss:AircraftParkingEvent rdf:type owl:Class ;
+                          rdfs:subClassOf aiss:Event;
+                          rdfs:subClassOf  [
+                                                rdf:type owl:Restriction ;
+                                                owl:onProperty aiss:involves ;
+                                                owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                                owl:onClass aiss:Aircraft;
+                                          ],
+                                          [
+                                                rdf:type owl:Restriction ;
+                                                owl:onProperty aiss:involves ;
+                                                owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                                owl:onClass [
+                                                      a owl:Restriction ;
+                                                      owl:onProperty aiss:hasRoleInOrganization ;
+                                                      owl:hasValue aiss:FlightCrewAgent
+                                                ];
+                                          ],
+                                          [
+                                                rdf:type owl:Restriction ;
+                                                owl:onProperty aiss:prerequires ;
+                                                owl:someValuesFrom aiss:CheckParkingEvent
+                                          ],
+                                          [
+                                                rdf:type owl:Restriction ;
+                                                owl:onProperty aiss:takesPlaceAt ;
+                                                owl:someValuesFrom aiss:Stand
+                                          ];
+                         rdfs:comment "When an aircraft is parked into a stand".
+
+aiss:AVDGSAircraftParkingEvent rdf:type owl:Class ;
+            rdfs:subClassOf aiss:AircraftParkingEvent;
+            rdfs:subClassOf [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:involves ;
+                  owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                  owl:onClass aiss:AVDGS;
+            ];
+            rdfs:comment "When an AVDGS helps the aircraft park into a stand.".
+
+
+aiss:MarshallerAircraftParkingEvent rdf:type owl:Class ;
+            rdfs:subClassOf aiss:AircraftParkingEvent;
+            rdfs:subClassOf  [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:involves ;
+                  owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                  owl:onClass [
+                        a owl:Restriction ;
+                        owl:onProperty aiss:hasRoleInOrganization ;
+                        owl:hasValue aiss:Marshaller
+                  ];
+            ];
+            rdfs:comment "When the marshaller (usually = ramp agent) helps the aircraft park into a stand.".
+
+
+aiss:LandingGearBlockEvent rdf:type owl:Class;
+                  rdfs:subClassOf aiss:Event;
+                  rdfs:subClassOf  [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:Aircraft;
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:prerequires ;
+                              owl:someValuesFrom aiss:AircraftParkingEvent
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:takesPlaceAt ;
+                              owl:someValuesFrom aiss:Stand
+                        ];
+            rdfs:comment "When chocks are placed on any landing gear of an aircraft.".
+
+
+aiss:NoseGearBlockEvent rdf:type owl:Class;
+                        rdfs:subClassOf aiss:LandingGearBlockEvent;
+                        rdfs:subClassOf [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass [
+                                    a owl:Restriction ;
+                                    owl:onProperty aiss:hasRoleInOrganization ;
+                                    owl:hasValue aiss:GroundCrewAgent
+                              ];
+                        ];
+                        rdfs:comment "When chocks are placed on the aircraft's nose gear.". 
+
+aiss:MainLandingGearBlockEvent rdf:type owl:Class;
+      rdfs:subClassOf aiss:LandingGearBlockEvent;
+      rdfs:subClassOf [
+            rdf:type owl:Restriction ;
+            owl:onProperty aiss:prerequires ;
+            owl:someValuesFrom aiss:NoseGearBlockEvent
+      ],
+      [
+            rdf:type owl:Restriction ;
+            owl:onProperty aiss:involves ;
+            owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+            owl:onClass [
+                  a owl:Restriction ;
+                  owl:onProperty aiss:hasRoleInOrganization ;
+                  owl:hasValue aiss:GroundCrewAgent
+            ];
+      ];
+      rdfs:comment "When chocks are placed on the main landing gear of the aircraft. Happens at: Actual Time of Arrival (ATA); a.k.a Actual In-Block Time (AIBT).".
+
+aiss:AirConditioningEvent rdf:type owl:Class;
+              rdfs:subClassOf aiss:GSEApproachEvent;
+              rdfs:subClassOf [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty aiss:involves ;
+                                    owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                    owl:onClass aiss:ACU;
+                              ],
+                              [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty aiss:involves ;
+                                    owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                    owl:onClass aiss:GPU;
+                              ],
+                              [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty aiss:involves ;
+                                    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                    owl:onClass aiss:Aircraft;
+                              ],
+                              [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty aiss:takesPlaceAt ;
+                                    owl:someValuesFrom aiss:Stand
+                              ],
+                              [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty aiss:prerequires ;
+                                    owl:someValuesFrom aiss:MainLandingGearBlockEvent
+                              ];
+              rdfs:comment "Time during which Air Conditioning Unit (ACU) remains hooked up to aircraft, for passenger/crew comfort during turnaround.".
+
+aiss:GSEApproachEvent rdf:type owl:Class; 
+                      rdfs:subClassOf aiss:Event;
+                      rdfs:subClassOf [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:takesPlaceAt ;
+                                          owl:someValuesFrom aiss:Stand
+                                      ],
+                                      [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:Aircraft;
+                                      ],
+                                      [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:GSE;
+                                      ],
+                                      [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass [
+                                                a owl:Restriction ;
+                                                owl:onProperty aiss:hasRoleInOrganization ;
+                                                owl:hasValue aiss:GuidePerson
+                                          ];
+                                      ],
+                                      [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:prerequires ;
+                                          owl:someValuesFrom aiss:MainLandingGearBlockEvent
+                                      ];
+                      rdfs:comment "When a GSE (Ground Support Equipment) approaches the aircraft, and a guide person enforces no touch policy.".
+                      
+aiss:PassengerTransferEvent rdf:type owl:Class; 
+                            rdfs:subClassOf aiss:GSEApproachEvent;
+                            rdfs:subClassOf [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:takesPlaceAt ;
+                                          owl:someValuesFrom aiss:Stand
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:Aircraft;
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:someValuesFrom aiss:Passenger
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass [
+                                                a owl:Restriction ;
+                                                owl:onProperty aiss:hasRoleInOrganization ;
+                                                owl:hasValue aiss:PassengerHandlerOperator
+                                          ];
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:PIGS;
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass [
+                                                a owl:Restriction ;
+                                                owl:onProperty aiss:hasRoleInOrganization ;
+                                                owl:hasValue aiss:RampAgent
+                                          ];
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:prerequires ;
+                                          owl:someValuesFrom aiss:MainLandingGearBlockEvent
+                                    ];
+                            rdfs:comment "When passengers embark or disembark from an aircraft.".
+
+aiss:JetBridgePassengerTransferEvent rdf:type owl:Class; 
+                                     rdfs:subClassOf aiss:PassengerTransferEvent;
+                                     rdfs:subClassOf [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:JetBridge;
+                                    ];
+                                    rdfs:comment "When passengers use a jet-bridge.".
+
+aiss:StairsPassengerTransferEvent rdf:type owl:Class; 
+                                  rdfs:subClassOf aiss:PassengerTransferEvent;
+                                  rdfs:subClassOf [
+                                        rdf:type owl:Restriction ;
+                                        owl:onProperty aiss:involves ;
+                                        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                        owl:onClass aiss:StairTruck;
+                                  ],                                     
+                                  [
+                                        rdf:type owl:Restriction ;
+                                        owl:onProperty aiss:involves ;
+                                        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                        owl:onClass aiss:Bus;
+                                  ];
+                                  rdfs:comment "When passengers use a shuttle bus and stairs.".
+
+aiss:JetBridgePassengerDisembarkEvent rdf:type owl:Class;
+                                    rdfs:subClassOf aiss:JetBridgePassengerTransferEvent;
+                                    rdfs:comment "When passengers use a jet-bridge to disembark.".
+
+aiss:StairsPassengerDisembarkEvent rdf:type owl:Class;
+                                    rdfs:subClassOf aiss:StairsPassengerTransferEvent;
+                                    rdfs:comment "When passengers use stairs and shuttle bus to disembark.".
+
+# May require disembarkment (but not if airplane is already empty)
+aiss:JetBridgePassengerEmbarkEvent rdf:type owl:Class;
+                                    rdfs:subClassOf aiss:JetBridgePassengerTransferEvent;
+                                    rdfs:comment "When passengers use a jet-bridge to embark.".
+
+aiss:StairsPassengerEmbarkEvent  rdf:type owl:Class;
+                                 rdfs:subClassOf aiss:StairsPassengerTransferEvent;
+                                 rdfs:comment "When passengers use stairs and shuttle bus to embark.".
+
+aiss:PRMTransferEvent rdf:type owl:Class; 
+                      rdfs:subClassOf aiss:PassengerTransferEvent;
+                      rdfs:subClassOf [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass [
+                                                a owl:Restriction ;
+                                                owl:onProperty aiss:hasRoleInOrganization ;
+                                                owl:hasValue aiss:PRM
+                                          ];
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass [
+                                                a owl:Restriction ;
+                                                owl:onProperty aiss:hasRoleInOrganization ;
+                                                owl:hasValue aiss:AccessibilityOperator
+                                          ];
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:Ambulift;
+                                    ];
+                      rdfs:comment "When a Passenger with Reduced Mobility (PRM) uses an Ambulift vehicle to embark or disembark.".
+
+
+aiss:PRMEmbarkEvent rdf:type owl:Class; 
+                    rdfs:subClassOf aiss:PRMTransferEvent;
+                    rdfs:comment "When a Passenger with Reduced Mobility (PRM) embarks.".
+
+aiss:PRMDisembarkEvent rdf:type owl:Class; 
+                    rdfs:subClassOf aiss:PRMTransferEvent;
+                    rdfs:comment "When a Passenger with Reduced Mobility (PRM) disembark.".
+
+aiss:ExternalAircraftInspectionEvent rdf:type owl:Class;
+                        rdfs:subClassOf aiss:Event;
+                        rdfs:subClassOf [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:Aircraft;
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass [
+                                    a owl:Restriction ;
+                                    owl:onProperty aiss:hasRoleInOrganization ;
+                                    owl:hasValue aiss:FlightCrewAgent
+                              ];
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:takesPlaceAt ;
+                              owl:someValuesFrom aiss:Stand
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:prerequires ;
+                              owl:someValuesFrom aiss:MainLandingGearBlockEvent
+                        ];
+                        rdfs:comment "When the pilot externally inspects the aircaft in preparation for departure.".
+
+
+aiss:InternalAircraftInspectionEvent rdf:type owl:Class; 
+                             rdfs:subClassOf aiss:Event;
+                             rdfs:subClassOf  [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty aiss:involves ;
+                                    owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                    owl:onClass aiss:Aircraft;
+                              ],
+                              [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty aiss:involves ;
+                                    owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                    owl:onClass [
+                                          a owl:Restriction ;
+                                          owl:onProperty aiss:hasRoleInOrganization ;
+                                          owl:hasValue aiss:CabinCrewAgent
+                                    ];
+                              ],
+                              [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty aiss:takesPlaceAt ;
+                                    owl:someValuesFrom aiss:Stand
+                              ],
+                              [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty aiss:prerequires ;
+                                    owl:someValuesFrom aiss:MainLandingGearBlockEvent
+                              ];
+                              rdfs:comment "When the cabin crew inspects the aircraft cabin in preparation for departure.".
+
+
+aiss:DeicingEvent rdf:type owl:Class; 
+                  rdfs:subClassOf aiss:Event;
+                  rdfs:subClassOf aiss:GSEApproachEvent;
+                  rdfs:subClassOf  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass aiss:Aircraft;
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass [
+                                    a owl:Restriction ;
+                                    owl:onProperty aiss:hasRoleInOrganization ;
+                                    owl:hasValue aiss:DeicingOperator
+                        ];
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass aiss:Deicer;
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:takesPlaceAt ;
+                        owl:someValuesFrom aiss:DeicingStand
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:prerequires ;
+                        owl:someValuesFrom aiss:MainLandingGearBlockEvent
+                  ];
+                  rdfs:comment "When ice is removed from the wings of an aircraft with the de-icer vehicle.".
+
+
+aiss:ToiletServiceEvent rdf:type owl:Class;
+                  rdfs:subClassOf aiss:GSEApproachEvent;
+                  rdfs:subClassOf [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass aiss:Aircraft;
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass aiss:ToiletServiceTruck;
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:takesPlaceAt ;
+                        owl:someValuesFrom aiss:Stand
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:prerequires ;
+                        owl:someValuesFrom aiss:MainLandingGearBlockEvent
+                  ];
+                  rdfs:comment "When toilets on an aircraft are cleaned up during turnaround.".
+
+
+aiss:QuickCleaningEvent rdf:type owl:Class; 
+                  rdfs:subClassOf aiss:GSEApproachEvent;
+                  rdfs:subClassOf [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass aiss:Aircraft;
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass [
+                              a owl:Restriction ;
+                              owl:onProperty aiss:hasRoleInOrganization ;
+                              owl:hasValue aiss:CleaningHandlerOperator
+                        ];
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:takesPlaceAt ;
+                        owl:someValuesFrom aiss:Stand
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:prerequires ;
+                        owl:someValuesFrom aiss:MainLandingGearBlockEvent
+                  ];
+                  rdfs:comment "When the aircraft is quickly cleaned up during turnaround.".
+
+
+aiss:RefuellingEvent rdf:type owl:Class; 
+                  rdfs:subClassOf aiss:GSEApproachEvent;
+                  rdfs:subClassOf [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass aiss:Aircraft;
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass [
+                              a owl:Restriction ;
+                              owl:onProperty aiss:hasRoleInOrganization ;
+                              owl:hasValue aiss:FuelSafetySupervisor
+                        ];
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass aiss:FuelTruck;
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:takesPlaceAt ;
+                        owl:someValuesFrom aiss:FuelSafetyZone
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:prerequires ;
+                        owl:someValuesFrom aiss:MainLandingGearBlockEvent
+                  ];
+                  rdfs:comment "When an aircraft is refuelled.".
+
+aiss:FuelSpillEvent rdf:type owl:Class; 
+                    rdfs:subClassOf aiss:Event;
+                    rdfs:subClassOf  [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty aiss:prerequires ;
+                          owl:someValuesFrom aiss:RefuellingEvent
+                    ],
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:takesPlaceAt ;
+                        owl:someValuesFrom aiss:Stand
+                    ],
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:someValuesFrom aiss:Aircraft
+                    ]
+                    ;
+                    rdfs:comment "When a significant amount of fuel (e.g. >= 3 meters in diameter) spills down on the stand.".
+
+aiss:FireEvent rdf:type owl:Class; 
+                  rdfs:subClassOf aiss:Event;
+                  rdfs:subClassOf  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:prerequires;
+                        owl:someValuesFrom aiss:FuelSpillEvent
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass [
+                              a owl:Restriction ;
+                              owl:onProperty aiss:hasRoleInOrganization ;
+                              owl:hasValue aiss:RescueAndFirefightingOperator
+                        ];
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass aiss:AirportCrashTender;
+                  ];
+                  rdfs:comment "When there is fire that must be put out.".
+
+aiss:JetBlastEvent  rdf:type owl:Class; 
+                  rdfs:subClassOf aiss:Event;
+                  rdfs:subClassOf [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass aiss:Aircraft;
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass aiss:PhysicalObject;
+                  ];
+                  rdfs:comment "When any physical object (such as FOD or GSE) standing behind the engine is blown away by the engine's thrust.".
+
+
+aiss:EngineIntakeEvent  rdf:type owl:Class; 
+                        rdfs:subClassOf aiss:Event;
+                        rdfs:subClassOf  [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:Aircraft;
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:PhysicalObject;
+                        ];
+                        rdfs:comment "When a physical object (such as a FOD) standing in front of the engine is sucked into the engine by its pumping action.".
+
+
+aiss:PotableWaterRestockingEvent  rdf:type owl:Class; 
+                                  rdfs:subClassOf aiss:GSEApproachEvent;
+                                  rdfs:subClassOf  [
+                                        rdf:type owl:Restriction ;
+                                        owl:onProperty aiss:takesPlaceAt ;
+                                        owl:someValuesFrom aiss:Stand
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:Aircraft;
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:PotableWaterTanker;
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:prerequires ;
+                                          owl:someValuesFrom aiss:MainLandingGearBlockEvent
+                                    ];
+                                  rdfs:comment "When potable water in the aircraft is restocked.".
+
+aiss:CateringEvent  rdf:type owl:Class; 
+                    rdfs:subClassOf aiss:GSEApproachEvent;                    
+                    rdfs:subClassOf  [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty aiss:takesPlaceAt ;
+                          owl:someValuesFrom aiss:Stand
+                    ],
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass aiss:Aircraft;
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass aiss:CateringTruck;
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass [
+                              a owl:Restriction ;
+                              owl:onProperty aiss:hasRoleInOrganization ;
+                              owl:hasValue aiss:CateringOperator
+                        ];
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:prerequires ;
+                        owl:someValuesFrom aiss:MainLandingGearBlockEvent
+                  ];
+                  rdfs:comment "When food in the aircraft is restocked.".
+
+aiss:DeadloadTransferEvent rdf:type owl:Class;
+                        rdfs:subClassOf aiss:Event;
+                        rdfs:subClassOf aiss:GSEApproachEvent;
+                        rdfs:subClassOf  [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:takesPlaceAt ;
+                              owl:someValuesFrom aiss:Stand
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:Deadload;
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:Aircraft;
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:BaggageTruck;
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:CargoLoader;
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:BeltLoader;
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass [
+                                    a owl:Restriction ;
+                                    owl:onProperty aiss:hasRoleInOrganization ;
+                                    owl:hasValue aiss:CargoOperator
+                              ];
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:prerequires ;
+                              owl:someValuesFrom aiss:MainLandingGearBlockEvent
+                        ];
+                       rdfs:comment "When deadload is transferred to or from the aircraft.".
+
+aiss:DeadloadLoadingEvent rdf:type owl:Class;
+                       rdfs:subClassOf aiss:DeadloadTransferEvent;
+                       rdfs:comment "When deadload is loaded onto the aircraft.".
+
+aiss:DeadloadUnloadingEvent rdf:type owl:Class;
+                         rdfs:subClassOf aiss:DeadloadTransferEvent;
+                         rdfs:comment "When deadload is unloaded from the aircraft.".
+
+
+aiss:StandClearingAtDepartureEvent rdf:type owl:Class;
+                        rdfs:subClassOf aiss:Event;
+                        rdfs:subClassOf  [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:takesPlaceAt ;
+                              owl:someValuesFrom aiss:Stand
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass [
+                                    a owl:Restriction ;
+                                    owl:onProperty aiss:hasRoleInOrganization ;
+                                    owl:hasValue aiss:RampAgent
+                              ];
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:GSE;
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:prerequires ;
+                              owl:someValuesFrom aiss:MainLandingGearBlockEvent
+                        ];
+                       rdfs:comment "When the stand is cleared of the GSEs (except for Pushback tractors, ASUs and some other stuff...) in preparation for engine startup.".
+
+aiss:WalkaroundEvent rdf:type owl:Class;
+                     rdfs:subClassOf aiss:Event;
+                     rdfs:subClassOf [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass [
+                                    a owl:Restriction ;
+                                    owl:onProperty aiss:hasRoleInOrganization ;
+                                    owl:hasValue aiss:RampAgent
+                              ];
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:Aircraft;
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:minQualifiedCardinality "0"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:FOD;
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:takesPlaceAt ;
+                              owl:someValuesFrom aiss:Stand
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:prerequires ;
+                              owl:someValuesFrom aiss:StandClearingAtDepartureEvent
+                        ];
+                     rdfs:comment "When the ramp agent walks around the aircraft checking for open doors, damage, or debris on the ground.".
+
+
+aiss:MainLandingGearUnlockEvent rdf:type owl:Class;
+      rdfs:subClassOf aiss:Event;
+      rdfs:subClassOf [
+            rdf:type owl:Restriction ;
+            owl:onProperty aiss:involves ;
+            owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+            owl:onClass aiss:Aircraft;
+      ],
+      [
+            rdf:type owl:Restriction ;
+            owl:onProperty aiss:involves ;
+            owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+            owl:onClass [
+                  a owl:Restriction ;
+                  owl:onProperty aiss:hasRoleInOrganization ;
+                  owl:hasValue aiss:GroundCrewAgent
+            ];
+      ],
+      [
+            rdf:type owl:Restriction ;
+            owl:onProperty aiss:takesPlaceAt ;
+            owl:someValuesFrom aiss:Stand
+      ],
+      [
+            rdf:type owl:Restriction ;
+            owl:onProperty aiss:prerequires ;
+            owl:someValuesFrom aiss:WalkaroundEvent
+      ];
+      rdfs:comment "When chocks are removed from the main landing gear.".
+
+aiss:NoseGearUnlockEvent rdf:type owl:Class;
+            rdfs:subClassOf aiss:Event;
+            rdfs:subClassOf [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:involves ;
+                  owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                  owl:onClass [
+                        a owl:Restriction ;
+                        owl:onProperty aiss:hasRoleInOrganization ;
+                        owl:hasValue aiss:GroundCrewAgent
+                  ];
+            ],
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:involves ;
+                  owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                  owl:onClass aiss:Aircraft;
+            ],
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:involves ;
+                  owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                  owl:onClass [
+                        a owl:Restriction ;
+                        owl:onProperty aiss:hasRoleInOrganization ;
+                        owl:hasValue aiss:FlightCrewAgent
+                  ];
+            ],
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:takesPlaceAt ;
+                  owl:someValuesFrom aiss:Stand
+            ],
+            # I tacchi vengono rimossi PRIMA dal carrello posteriore POI da quello anteriore
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:prerequires ;
+                  owl:someValuesFrom aiss:MainLandingGearUnlockEvent
+            ];
+            rdfs:comment "When chocks are removed from the nose gear, and the pilot can request a READY signal from the AirportOperator.".
+
+aiss:ReadySignalRequestEvent rdf:type owl:Class;
+            rdfs:subClassOf aiss:Event;
+            rdfs:subClassOf [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:involves ;
+                  owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                  owl:onClass aiss:Aircraft;
+            ],
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:involves ;
+                  owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                  owl:onClass [
+                        a owl:Restriction ;
+                        owl:onProperty aiss:hasRoleInOrganization ;
+                        owl:hasValue aiss:FlightCrewAgent
+                  ];
+            ],
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:takesPlaceAt ;
+                  owl:someValuesFrom aiss:Stand
+            ],
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:prerequires ;
+                  owl:someValuesFrom aiss:NoseGearUnlockEvent
+            ];
+            rdfs:comment "When a READY signal for an aicraft is requested from the AirportOperator.".
+
+aiss:ReadySignalGrantedEvent rdf:type owl:Class;
+            rdfs:subClassOf aiss:Event;
+            rdfs:subClassOf [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:involves ;
+                  owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                  owl:onClass aiss:Aircraft;
+            ],
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:involves ;
+                  owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                  owl:onClass [
+                        a owl:Restriction ;
+                        owl:onProperty aiss:hasRoleInOrganization ;
+                        owl:hasValue aiss:FlightCrewAgent
+                  ];
+            ],
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:takesPlaceAt ;
+                  owl:someValuesFrom aiss:Stand
+            ],
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty aiss:prerequires ;
+                  owl:someValuesFrom aiss:ReadySignalRequestEvent
+            ];
+            rdfs:comment "When a READY signal for the departure of an aircraft is granted by the AirportOperator.".
+
+
+
+
+
+
+
+
+aiss:EngineStartEvent rdf:type owl:Class;
+                      rdfs:subClassOf aiss:Event;
+                      rdfs:subClassOf [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:takesPlaceAt ;
+                              owl:someValuesFrom aiss:Stand
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:Aircraft;
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:minQualifiedCardinality "0"^^xsd:nonNegativeInteger ;
+                              owl:onClass aiss:ASU;
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass [
+                                    a owl:Restriction ;
+                                    owl:onProperty aiss:hasRoleInOrganization ;
+                                    owl:hasValue aiss:FlightCrewAgent
+                              ];
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass [
+                                    a owl:Restriction ;
+                                    owl:onProperty aiss:hasRoleInOrganization ;
+                                    owl:hasValue aiss:RampAgent
+                              ]; 
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:involves ;
+                              owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                              owl:onClass [
+                                    a owl:Restriction ;
+                                    owl:onProperty aiss:hasRoleInOrganization ;
+                                    owl:hasValue aiss:ControlTowerOperator
+                              ];
+                        ],
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty aiss:prerequires ;
+                              owl:someValuesFrom aiss:NoseGearUnlockEvent
+                        ];
+                      rdfs:comment "When the aircraft's engines are started up, either internally or with help of an Air Starter Unit (ASU).".
+
+aiss:StandExitEvent rdf:type owl:Class;
+                    rdfs:subClassOf aiss:Event;
+                    rdfs:subClassOf [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:takesPlaceAt ;
+                                          owl:someValuesFrom aiss:Stand
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:Aircraft;
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass [
+                                                a owl:Restriction ;
+                                                owl:onProperty aiss:hasRoleInOrganization ;
+                                                owl:hasValue aiss:ControlTowerOperator
+                                          ];
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:prerequires ;
+                                          owl:someValuesFrom aiss:EngineStartEvent
+                                    ];
+                    rdfs:comment "When an aircraft exits the stand, (for instance: in preparation for takeoff). This is ATD (Actual Time of Departure); a.k.a. AOBT (Actuall Off Block Time). This is the end of the turnaround phase.".
+
+
+aiss:PushbackStandExitEvent rdf:type owl:Class;
+                    rdfs:subClassOf aiss:StandExitEvent;
+                    rdfs:subClassOf [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:PushbackTractor;
+                                    ];
+                    rdfs:comment "When an aircraft is pushed back out of the stand and towed by a tractor.".
+
+aiss:SelfManeuveringStandExitEvent rdf:type owl:Class;
+                        rdfs:subClassOf aiss:StandExitEvent;
+                        rdfs:comment "When an aircraft exits the stand without relying on external pushback. The aircraft may do it by forward movement or, less commonly, by powerback.".
+
+
+aiss:TaxiingAtDepartureEvent rdf:type owl:Class;
+                    rdfs:subClassOf aiss:Event;
+                    rdfs:subClassOf [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:takesPlaceAt ;
+                                          owl:someValuesFrom aiss:Taxiway
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:Aircraft;
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass [
+                                                a owl:Restriction ;
+                                                owl:onProperty aiss:hasRoleInOrganization ;
+                                                owl:hasValue aiss:ControlTowerOperator
+                                          ];
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass [
+                                                a owl:Restriction ;
+                                                owl:onProperty aiss:hasRoleInOrganization ;
+                                                owl:hasValue aiss:FollowMeOperator
+                                          ];
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:prerequires ;
+                                          owl:someValuesFrom aiss:StandExitEvent
+                                    ];
+                    rdfs:comment "When an aircraft moves towards a runway, in preparation for takeoff.".
+
+aiss:TakeoffEvent   rdf:type owl:Class;
+                    rdfs:subClassOf aiss:Event;
+                    rdfs:subClassOf [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:takesPlaceAt ;
+                                          owl:someValuesFrom aiss:Runway
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:Aircraft;
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass [
+                                                a owl:Restriction ;
+                                                owl:onProperty aiss:hasRoleInOrganization ;
+                                                owl:hasValue aiss:ControlTowerOperator
+                                          ];
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:prerequires ;
+                                          owl:someValuesFrom aiss:TaxiingAtDepartureEvent
+                                    ];
+                    rdfs:comment "When an aircraft takes off the ground.".
+
+
+aiss:AirborneOutboundEvent rdf:type owl:Class ;
+                    rdfs:subClassOf aiss:Event;
+                    rdfs:subClassOf [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:takesPlaceAt ;
+                                          owl:someValuesFrom aiss:AirRoute
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:Aircraft;
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:prerequires ;
+                                          owl:someValuesFrom aiss:TakeoffEvent
+                                    ];
+                    rdfs:comment "When an airborne aircraft finally starts for its destination.".
+
+
+aiss:GSEIdlingEvent rdf:type owl:Class;
+                  rdfs:subClassOf aiss:Event;
+                  rdfs:subClassOf [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:takesPlaceAt ;
+                        owl:someValuesFrom [
+                              rdf:type owl:Class ;
+                              owl:unionOf ( aiss:ESA aiss:EPA ) 
+                        ]
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty aiss:involves ;
+                        owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:onClass aiss:GSE;
+                  ];
+                  rdfs:comment "When a GSE (Ground Support Equipment) vehicle is waiting at an ESA (Equipment Service Area) or an EPA (Equipment Parking Area).".
+
+aiss:ApronCleaningEvent  rdf:type owl:Class;
+                         rdfs:subClassOf aiss:Event;
+                         rdfs:subClassOf [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:RunwayCleaningTruck;
+                                    ],
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty aiss:involves ;
+                                          owl:minQualifiedCardinality "0"^^xsd:nonNegativeInteger ;
+                                          owl:onClass aiss:FOD;
+                                    ],
+                               [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty aiss:takesPlaceAt ;
+                                    owl:someValuesFrom aiss:Apron
+                               ];
+                         rdfs:comment "When the apron is cleaned from FOD.".
+
+aiss:DebrisOnStandEvent  rdf:type owl:Class;
+                         rdfs:subClassOf aiss:Event;
+                         rdfs:subClassOf 
+                               [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty aiss:involves ;
+                                    owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                    owl:onClass aiss:FOD;
+                              ],
+                              [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty aiss:takesPlaceAt ;
+                                    owl:someValuesFrom aiss:Stand
+                              ];
+                         rdfs:comment "When there is FOD on the Apron.".
+
+
+# PHYSICAL OBJECTS ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+aiss:FOD rdf:type owl:Class ;
+         rdfs:subClassOf aiss:PhysicalObject;
+         rdfs:comment "Foreign Debris Object, any dangerous alien object found on the tarmac.".
+
+aiss:GSE rdf:type owl:Class;
+         rdfs:subClassOf ioe:System;
+         rdfs:subClassOf aiss:PhysicalObject;
+         rdfs:comment "Ground Support Equipment (GSE), any devices or vehicles that serve an aircraft while it's on the tarmac.".
+
+aiss:GPU rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "Ground Power Unit (GPU), supplies energy to parked aircraft while engines are off.".
+
+aiss:ACU rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "Air Conditioning Unit (ACU), supplies cool/hot air to parked aircraft. Needs GPU.".
+
+aiss:ASU rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "Air Starter Unit (ASU), starts up the engine of aircraft models that cannot do it internally.".
+
+aiss:DeicingStand rdf:type owl:Class; 
+                  rdfs:subClassOf aiss:Stand;
+                  rdfs:comment "A kind of stand that supports de-icing (removing ice from wings).".
+
+aiss:RunwayCleaningTruck rdf:type owl:Class;
+                         rdfs:subClassOf aiss:GSE;
+                         rdfs:comment "Cleaning service truck.".
+
+aiss:SmartObject rdf:type owl:Class;
+           rdfs:subClassOf ioe:SmartObject ;
+           rdfs:subClassOf aiss:Agent ;
+           rdfs:subClassOf aiss:PhysicalObject;
+           rdfs:comment "An IoT device with sensors and actuators.".
+
+aiss:AVDGS rdf:type owl:Class ;
+           rdfs:subClassOf aiss:SmartObject;
+           rdfs:comment "Advanced Visual Docking Guidance System, helps the aircraft park into a stand, can substitute a human marshaller.".
+
+aiss:PushbackTractor rdf:type owl:Class ;
+           rdfs:subClassOf aiss:GSE ;
+           rdfs:comment "A kind of vehicle that pushes and tows the aircraft to move it out of the stand.".
+
+aiss:PIGS rdf:type owl:Class;
+         rdfs:subClassOf ioe:System;
+         rdfs:subClassOf aiss:PhysicalObject;
+         rdfs:comment "Passenger Integrated Guidance Systems, they help passengers know where to go.".
+
+aiss:JetBridge rdf:type owl:Class;
+         rdfs:subClassOf ioe:System;
+         rdfs:subClassOf aiss:PhysicalObject;
+         rdfs:comment "A sky bridge that connects a gate to an aircraft.".
+
+aiss:StairTruck rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "A truck that carries stairs to help passengers get onto the aircraft.".
+
+aiss:Bus rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "A shuttle bus used to get passengers from the gate to the aircraft.".
+
+aiss:Ambulift rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "A vehicle that helps PRMs get onto the aircraft.".
+
+aiss:Deicer rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "Special vehicle used to remove ice from an aircraft's wings.".
+
+aiss:ToiletServiceTruck rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "Removes waste water from the aircraft.".
+
+aiss:AirportCrashTender rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "An airport firetruck.".
+
+aiss:PotableWaterTanker rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "Supplies fresh drinking water to the aircraft.".
+
+aiss:CateringTruck rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "Vehicle that supplies food to the aircraft.".
+
+aiss:FuelTruck rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "Vehicle that supplies fuel to the aircraft.".
+
+aiss:BaggageTruck rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "Carries baggage to and from an aircraft.".
+
+aiss:CargoLoader rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "Loads baggage to and from an aircraft.".
+
+aiss:BeltLoader rdf:type owl:Class;
+         rdfs:subClassOf aiss:GSE;
+         rdfs:comment "Conveys baggage between cargo loader and baggae truck.".
+
+aiss:Mass rdf:type owl:Class;
+          rdfs:subClassOf xsd:double ;
+          rdfs:comment "Mass in kilograms.".
+
+aiss:Deadload rdf:type owl:Class;
+           rdfs:subClassOf aiss:PhysicalObject;
+           rdfs:comment "Any load transported by an aircraft, such as luggage, mail or goods/cargo.".
+
+aiss:Passenger rdf:type owl:Class;
+         rdfs:subClassOf aiss:PhysicalObject;
+         rdfs:comment "A person who travels on an aircraft and is not a member of the cabin crew.".
+
+aiss:PRM rdf:type owl:Class;
+         rdfs:subClassOf aiss:Passenger;
+         rdfs:comment "A Passenger/Person with Reduced Mobility.".
+
+# ROLES ------------------------------------------------------------------------------------------
+
+aiss:FuelSafetySupervisor rdf:type owl:Class;
+                        rdf:type owl:NamedIndividual ;
+                        rdfs:comment "Agent (usually the pilot) who is responsible for monitoring the refuelling process and constantly communicating with the refuelling team.".
+
+aiss:ControlTowerOperator rdf:type owl:Class;
+         rdf:type owl:NamedIndividual ;
+         a aiss:Role;
+         rdfs:comment "A control tower operator.".
+
+aiss:FollowMeOperator rdf:type owl:Class;
+         rdf:type owl:NamedIndividual ;
+         a aiss:Role;
+         rdfs:comment "The follow me service is offered by a car that helps a landed aircraft reach their parking stand (or viceversa: a departing aircraft in reaching the runway).".
+
+aiss:RampAgent rdf:type owl:Class;
+         rdf:type owl:NamedIndividual ;
+         a aiss:Role;
+         rdfs:comment "A member of the ground crew responsible for the aircraft during its stay in the stand.".
+
+aiss:Marshaller rdf:type owl:Class;
+         a aiss:Role;
+         rdf:type owl:NamedIndividual ;
+         rdfs:comment "Helps the aircraft park in the stand (usually coincides with ramp agent).".
+
+aiss:GuidePerson rdf:type owl:Class;
+         a aiss:Role;
+         rdf:type owl:NamedIndividual ;
+         rdfs:comment "Ensures the no touch policy is enforced when a GSE approaches an aircraft.".
+
+aiss:PassengerHandlerOperator rdf:type owl:Class;
+         a aiss:Role;
+         rdf:type owl:NamedIndividual ;
+         rdfs:comment "Supervises the passengers as they board or leave the aircraft.".
+
+aiss:AccessibilityOperator rdf:type owl:Class;
+         a aiss:Role;
+         rdf:type owl:NamedIndividual ;
+         rdfs:comment "Helps PRMs (Passengers with Reduced Mobility).".
+
+aiss:DeicingOperator rdf:type owl:Class;
+         a aiss:Role;
+         rdf:type owl:NamedIndividual ;
+         rdfs:comment "Operates a de-icer.".
+
+aiss:CleaningHandlerOperator rdf:type owl:Class;
+         a aiss:Role;
+         rdf:type owl:NamedIndividual ;
+         rdfs:comment "Person that cleans the aircraft.".
+
+aiss:RescueAndFirefightingOperator rdf:type owl:Class;
+         a aiss:Role;
+         rdf:type owl:NamedIndividual ;
+         rdfs:comment "A firefighting service.".
+
+aiss:CargoOperator rdf:type owl:Class;
+         a aiss:Role;
+         rdf:type owl:NamedIndividual ;
+         rdfs:comment "Operates machinery to load/unload cargo from aircraft.".
+
+aiss:CabinCrewAgent rdf:type owl:Class;
+         a aiss:Role;
+         rdf:type owl:NamedIndividual ;
+         rdfs:comment "Works on board of an aircraft, includes hostesses and stewards.".
+
+aiss:FlightCrewAgent rdf:type owl:Class;
+         rdf:type owl:NamedIndividual ;
+         a aiss:Role;
+         rdf:type owl:NamedIndividual ;
+         rdfs:comment "The pilots of an aircraft.".
+
+aiss:CateringOperator rdf:type owl:Class;
+         rdf:type owl:NamedIndividual; 
+         a aiss:Role;
+         rdf:type owl:NamedIndividual ;
+         rdfs:comment "Person that supplies food to the aircraft.".
+
+aiss:GroundCrewAgent 
+         a aiss:Role;
+         rdf:type owl:NamedIndividual ;
+         rdfs:comment "Worker involved in ground operations on the apron.".
+
+# SITES (LOCATIONS) ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+aiss:Airport rdf:type owl:Class;
+         rdfs:subClassOf aiss:Site;
+         rdfs:subClassOf [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty bot:containsZone ;
+                        owl:someValuesFrom aiss:Apron
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty bot:containsZone ;
+                        owl:someValuesFrom aiss:Runway
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty bot:containsZone ;
+                        owl:someValuesFrom aiss:Taxiway
+                  ],
+                  [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty bot:containsZone ;
+                        owl:someValuesFrom aiss:Gate
+                  ];
+         rdfs:comment "An airport together with its essential set of premises.".
+
+aiss:Runway rdf:type owl:Class;
+         rdfs:subClassOf aiss:Site;
+         rdfs:comment "A road where an aircraft can land or take off from.".
+
+aiss:Taxiway rdf:type owl:Class;
+         rdfs:subClassOf aiss:Site;
+         rdfs:comment "A road that an aircraft uses to get from the stand to the runway (when departing), and viceversa (when arriving).".
+
+aiss:ApronTaxiway rdf:type owl:Class;
+         rdfs:subClassOf aiss:Taxiway;
+         rdfs:comment "A taxiway that is within the area of the apron.".
+
+aiss:Apron rdf:type owl:Class ;
+           rdfs:subClassOf aiss:Site;
+           rdfs:comment "The place (ajdacent to the terminal buildings) where the aircrafts are parked, loaded/unloaded and maintained while on the ground.";
+            rdfs:subClassOf [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty bot:containsZone ;
+                  owl:someValuesFrom aiss:Stand
+            ],
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty bot:containsZone ;
+                  owl:someValuesFrom aiss:FuelSafetyZone
+            ],
+            [
+                  rdf:type owl:Restriction ;
+                  owl:onProperty bot:containsZone ;
+                  owl:someValuesFrom aiss:ApronTaxiway
+            ].
+
+aiss:FuelSafetyZone rdf:type owl:Class;
+         rdfs:subClassOf aiss:Site;
+         rdfs:comment "A special zone where it is safe to refuel the aircraft.".
+
+aiss:EPA rdf:type owl:Class ;
+           rdfs:subClassOf aiss:Site;
+           rdfs:comment "Equipment Parking Area, part of the stand where the GSE can be stationed.".
+
+aiss:NPA rdf:type owl:Class ;
+           rdfs:subClassOf aiss:Site;
+           rdfs:comment "No Parking Area, an area where neither aircraft nor GSE can park.".
+
+aiss:ESA rdf:type owl:Class ;
+           rdfs:subClassOf aiss:Site;
+           rdfs:comment "Equipment Service Area, area where GSEs wait for their turn to become operational.".
+
+aiss:ERA rdf:type owl:Class ;
+           rdfs:subClassOf aiss:Site;
+           rdfs:comment "Equipment Restricted Area, a.k.a Aircraft Safety Area (ASA), area that GSEs have limited access to.".
+
+aiss:Gate rdf:type owl:Class ;
+           rdfs:subClassOf aiss:Site;
+           rdfs:comment "A gate at the terminal from which passengers board the aircraft.".
+
+aiss:Stand rdf:type owl:Class ;
+      rdfs:subClassOf aiss:Site;
+      rdfs:subClassOf [
+            rdf:type owl:Restriction ;
+            owl:onProperty bot:containsZone ;
+            owl:someValuesFrom aiss:EPA
+      ],
+      [
+            rdf:type owl:Restriction ;
+            owl:onProperty bot:containsZone ;
+            owl:someValuesFrom aiss:ESA
+      ],
+      [
+            rdf:type owl:Restriction ;
+            owl:onProperty bot:containsZone ;
+            owl:someValuesFrom aiss:ERA
+      ],
+      [
+            rdf:type owl:Restriction ;
+            owl:onProperty bot:adjacentZone ;
+            owl:someValuesFrom aiss:Gate
+      ];
+      rdfs:comment "The location on the tarmac where a single aircraft is parked during turnaround.".
+
+aiss:HoldingPatternAirspace rdf:type owl:Class;
+         rdfs:subClassOf aiss:Site;
+         rdfs:comment "An airspace above the airport where an aircraft is permitted to wait for its turn before landing".
+
+aiss:AirRoute rdf:type owl:Class;
+         rdfs:subClassOf aiss:Site;
+         rdfs:comment "The route that an Aicraft follows when on course towards another airport.".
+
+# ORGANIZATIONS --------------------------------------------------------------------------------
+
+aiss:Airline rdf:type owl:Class;
+             rdfs:subClassOf aiss:Organization;
+             rdfs:comment "A company that organizes flights.".
+
+aiss:AirportOperator rdf:type owl:Class;
+             rdfs:subClassOf aiss:Organization;
+             rdfs:comment "Organization that manages most of the premises of an airport.".
+
+aiss:Handler rdf:type owl:Class;
+             rdfs:subClassOf aiss:Organization;
+             rdfs:comment "A contractor that provides some service on the airport premises.".
+
+aiss:Backoffice rdf:type owl:Class;
+             rdfs:subClassOf aiss:Organization;
+             rdfs:comment "Part of the airport manager that manages resources allocation and planning.".
+                  
+aiss:Frontoffice rdf:type owl:Class;
+             rdfs:subClassOf aiss:Organization;
+             rdfs:comment "Part of the airport manages ground crew operations.".
+
+aiss:ControlTower rdf:type owl:Class;
+         rdfs:subClassOf aiss:Organization;
+         rdfs:comment "A control tower.".
+
+aiss:CateringHandler rdf:type owl:Class;
+                     rdfs:subClassOf aiss:Handler;
+                     rdfs:comment "Provides catering service.".
+
+aiss:PushbackHandler rdf:type owl:Class;
+                     rdfs:subClassOf aiss:Handler;
+                     rdfs:comment "Provides push-back service.".
+
+aiss:FuelHandler rdf:type owl:Class;
+                     rdfs:subClassOf aiss:Handler;
+                     rdfs:comment "Provides re-fuelling service.".
+
+aiss:CleaningHandler rdf:type owl:Class;
+                     rdfs:subClassOf aiss:Handler;
+                     rdfs:comment "Provides cleaning services.".
+
+aiss:LoadUnloadHandler rdf:type owl:Class;
+                     rdfs:subClassOf aiss:Handler;
+                     rdfs:comment "Provides loading and unloading services for cargo and other deadload.".
+
+aiss:PassengerHandler rdf:type owl:Class;
+                     rdfs:subClassOf aiss:Handler;
+                     rdfs:comment "Provides passenger supervision and routing services.".
+
+
