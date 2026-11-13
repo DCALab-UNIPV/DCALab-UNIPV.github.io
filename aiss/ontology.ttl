@@ -31,7 +31,7 @@ dcterms:creator [
                   foaf:name "Aiman Al Masoud"
             ];
 # TODO: add license?
-# dcterms:license <https://creativecommons.org/licenses/by/4.0> ;
+dcterms:license <https://creativecommons.org/licenses/by/4.0> ;
 vann:preferredNamespacePrefix "aiss" ;
 vann:preferredNamespaceUri <https://w3id.org/aiss#> ;
 rdfs:comment "AISS (Airport Information Semantic Scheme) is an ontology for the airport domain, focused on modelling ground operations, resources, and sources of information, with the aim of optimizing the aircraft turnaround process. Aircraft turnaround is a critical step in airport operations, as it is the process by which the actors across several airports co-ordinate by sharing real-time information." ;
